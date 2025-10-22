@@ -4,9 +4,31 @@ from pydantic import BaseModel
 from google import genai
 import os
 # from dotenv import load_dotenv
-from typing import Optional
+from typing import Optional, List, Dict
 import uuid
+import json
+import logging
 from pathlib import Path
+
+from langchain_google_genai import ChatGoogleGenerativeAI
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+try:
+    llm = ChatGoogleGenerativeAI(
+        model="gemini-2.5-flash",
+        temperature=0,
+        max_tokens=None,
+        timeout=None,
+        max_retries=2,
+        # other params...
+    )
+    logger.info("LLM initialized successfully")
+except Exception as e:
+    logger.error(f"Error initializing LLM: {e}")
+    llm = None
 
 app = FastAPI()
 
@@ -20,8 +42,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize OpenAI client
-client = genai.Client()
+# Initialize Google AI client
+try:
+    client = genai.Client()
+    logger.info("Google AI client initialized successfully")
+except Exception as e:
+    logger.error(f"Error initializing Google AI client: {e}")
+    client = None
 
 # Memory directory
 MEMORY_DIR = Path("../memory")
@@ -30,27 +57,43 @@ MEMORY_DIR.mkdir(exist_ok=True)
 
 # Load personality details
 def load_personality():
-    with open("me.txt", "r", encoding="utf-8") as f:
-        return f.read().strip()
+    try:
+        with open("me.txt", "r", encoding="utf-8") as f:
+            return f.read().strip()
+    except Exception as e:
+        logger.error(f"Error loading personality file: {e}")
+        return "You are a helpful AI assistant."
 
 
-PERSONALITY = load_personality()
+try:
+    PERSONALITY = load_personality()
+    logger.info("Personality loaded successfully")
+except Exception as e:
+    logger.error(f"Failed to load personality: {e}")
+    PERSONALITY = "You are a helpful AI assistant."
 
 # Memory functions
 def load_conversation(session_id: str) -> List[Dict]:
     """Load conversation history from file"""
-    file_path = MEMORY_DIR / f"{session_id}.json"
-    if file_path.exists():
-        with open(file_path, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return []
+    try:
+        file_path = MEMORY_DIR / f"{session_id}.json"
+        if file_path.exists():
+            with open(file_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        return []
+    except Exception as e:
+        logger.error(f"Error loading conversation {session_id}: {e}")
+        return []
 
 
 def save_conversation(session_id: str, messages: List[Dict]):
     """Save conversation history to file"""
-    file_path = MEMORY_DIR / f"{session_id}.json"
-    with open(file_path, "w", encoding="utf-8") as f:
-        json.dump(messages, f, indent=2, ensure_ascii=False)
+    try:
+        file_path = MEMORY_DIR / f"{session_id}.json"
+        with open(file_path, "w", encoding="utf-8") as f:
+            json.dump(messages, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        logger.error(f"Error saving conversation {session_id}: {e}")
 
 
 # Request/Response models
@@ -79,26 +122,48 @@ async def chat(request: ChatRequest):
     try:
         # Generate session ID if not provided
         session_id = request.session_id or str(uuid.uuid4())
-
-        
-
+        logger.info(f"Processing chat request for session: {session_id}")
         
         conversation = load_conversation(session_id)
-        prompt = f"{PERSONALITY}\n\nUser: {request.message}\nAssistant:"
+        # Build messages with history
+        messages = [{"role": "system", "content": PERSONALITY}]
+        
+        # Add conversation history
+        for msg in conversation:
+            messages.append(msg)
+        
+        # Add current message
+        messages.append({"role": "user", "content": request.message})
+        logger.info(f"Sending {len(messages)} messages to LLM")
 
         # Call Gemini API
-        response = client.models.generate_content(
-            model="gemini-2.5-flash", contents=prompt
-        )
-      
+        try:
+            if llm is None:
+                raise Exception("LLM not initialized properly")
+            response = llm.invoke(messages)
+            logger.info("LLM response received successfully")
+        except Exception as llm_error:
+            logger.error(f"LLM invocation error: {llm_error}")
+            raise HTTPException(status_code=500, detail=f"LLM error: {str(llm_error)}")
 
+        # Update conversation history
+        conversation.append({"role": "user", "content": request.message})
+        conversation.append({"role": "assistant", "content": response.text})
+        
+        # Save updated conversation
+        save_conversation(session_id, conversation)
+        
+        logger.info(f"Chat response sent for session: {session_id}")
         return ChatResponse(
             response=response.text,
             session_id=session_id
         )
 
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Unexpected error in chat endpoint: {e}")
+        raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
 
 
 if __name__ == "__main__":
