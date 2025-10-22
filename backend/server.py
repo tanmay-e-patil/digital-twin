@@ -165,6 +165,21 @@ async def chat(request: ChatRequest):
         logger.error(f"Unexpected error in chat endpoint: {e}")
         raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
 
+@app.get("/sessions")
+async def list_sessions():
+    """List all conversation sessions"""
+    sessions = []
+    for file_path in MEMORY_DIR.glob("*.json"):
+        session_id = file_path.stem
+        with open(file_path, "r", encoding="utf-8") as f:
+            conversation = json.load(f)
+            sessions.append({
+                "session_id": session_id,
+                "message_count": len(conversation),
+                "last_message": conversation[-1]["content"] if conversation else None
+            })
+    return {"sessions": sessions}
+
 
 if __name__ == "__main__":
     import uvicorn
