@@ -12,6 +12,8 @@ from pathlib import Path
 
 from langchain_google_genai import ChatGoogleGenerativeAI
 
+from context import prompt
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -29,6 +31,8 @@ try:
 except Exception as e:
     logger.error(f"Error initializing LLM: {e}")
     llm = None
+
+
 
 app = FastAPI()
 
@@ -50,50 +54,59 @@ except Exception as e:
     logger.error(f"Error initializing Google AI client: {e}")
     client = None
 
-# Memory directory
-MEMORY_DIR = Path("../memory")
-MEMORY_DIR.mkdir(exist_ok=True)
+
+# Memory storage configuration
+USE_S3 = os.getenv("USE_S3", "false").lower() == "true"
+S3_BUCKET = os.getenv("S3_BUCKET", "")
+MEMORY_DIR = os.getenv("MEMORY_DIR", "../memory")
+
+# Initialize S3 client if needed
+if USE_S3:
+    s3_client = boto3.client("s3")
 
 
-# Load personality details
-def load_personality():
-    try:
-        with open("me.txt", "r", encoding="utf-8") as f:
-            return f.read().strip()
-    except Exception as e:
-        logger.error(f"Error loading personality file: {e}")
-        return "You are a helpful AI assistant."
-
-
-try:
-    PERSONALITY = load_personality()
-    logger.info("Personality loaded successfully")
-except Exception as e:
-    logger.error(f"Failed to load personality: {e}")
-    PERSONALITY = "You are a helpful AI assistant."
-
+# Memory management functions
+def get_memory_path(session_id: str) -> str:
+    return f"{session_id}.json"
 # Memory functions
 def load_conversation(session_id: str) -> List[Dict]:
     """Load conversation history from file"""
-    try:
-        file_path = MEMORY_DIR / f"{session_id}.json"
-        if file_path.exists():
-            with open(file_path, "r", encoding="utf-8") as f:
+    if USE_S3:
+        try:
+            response = s3_client.get_object(Bucket=S3_BUCKET, Key=get_memory_path(session_id))
+            return json.loads(response["Body"].read().decode("utf-8"))
+        except ClientError as e:
+            if e.response["Error"]["Code"] == "NoSuchKey":
+                return []
+            raise
+    else:
+        # Local file storage
+        file_path = os.path.join(MEMORY_DIR, get_memory_path(session_id))
+        if os.path.exists(file_path):
+            with open(file_path, "r") as f:
                 return json.load(f)
-        return []
-    except Exception as e:
-        logger.error(f"Error loading conversation {session_id}: {e}")
         return []
 
 
 def save_conversation(session_id: str, messages: List[Dict]):
-    """Save conversation history to file"""
-    try:
-        file_path = MEMORY_DIR / f"{session_id}.json"
-        with open(file_path, "w", encoding="utf-8") as f:
-            json.dump(messages, f, indent=2, ensure_ascii=False)
-    except Exception as e:
-        logger.error(f"Error saving conversation {session_id}: {e}")
+    """Save conversation history to storage"""
+    if USE_S3:
+        s3_client.put_object(
+            Bucket=S3_BUCKET,
+            Key=get_memory_path(session_id),
+            Body=json.dumps(messages, indent=2),
+            ContentType="application/json",
+        )
+    else:
+        # Local file storage
+        os.makedirs(MEMORY_DIR, exist_ok=True)
+        file_path = os.path.join(MEMORY_DIR, get_memory_path(session_id))
+        with open(file_path, "w") as f:
+            json.dump(messages, f, indent=2)
+
+
+
+
 
 
 # Request/Response models
@@ -109,12 +122,15 @@ class ChatResponse(BaseModel):
 
 @app.get("/")
 async def root():
-    return {"message": "AI Digital Twin API"}
-
+    return {
+        "message": "AI Digital Twin API",
+        "memory_enabled": True,
+        "storage": "S3" if USE_S3 else "local",
+    }
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy"}
+    return {"status": "healthy", "use_s3": USE_S3}
 
 
 @app.post("/chat", response_model=ChatResponse)
@@ -126,7 +142,7 @@ async def chat(request: ChatRequest):
         
         conversation = load_conversation(session_id)
         # Build messages with history
-        messages = [{"role": "system", "content": PERSONALITY}]
+        messages = [{"role": "system", "content": prompt()}]
         
         # Add conversation history
         for msg in conversation:
@@ -179,6 +195,15 @@ async def list_sessions():
                 "last_message": conversation[-1]["content"] if conversation else None
             })
     return {"sessions": sessions}
+
+@app.get("/conversation/{session_id}")
+async def get_conversation(session_id: str):
+    """Retrieve conversation history"""
+    try:
+        conversation = load_conversation(session_id)
+        return {"session_id": session_id, "messages": conversation}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 if __name__ == "__main__":
