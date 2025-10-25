@@ -1,0 +1,107 @@
+[env]
+ENVIRONMENT = "dev"
+PROJECT_NAME = "twin"
+
+[tasks.build-lambda]
+description = "Build Lambda package"
+run = "cd backend && uv run deploy.py"
+
+[tasks.terraform-init]
+description = "Initialize Terraform"
+run = "cd terraform && terraform init -input=false"
+
+[tasks.terraform-workspace]
+description = "Create or select Terraform workspace"
+depends = ["terraform-init"]
+run = '''
+cd terraform
+if ! terraform workspace list | grep -q "$ENVIRONMENT"; then
+  terraform workspace new "$ENVIRONMENT"
+else
+  terraform workspace select "$ENVIRONMENT"
+fi
+'''
+
+[tasks.terraform-apply]
+description = "Apply Terraform configuration"
+depends = ["terraform-workspace"]
+run = '''
+cd terraform
+if [ "$ENVIRONMENT" = "prod" ]; then
+  terraform apply -var-file=prod.tfvars -var="project_name=$PROJECT_NAME" -var="environment=$ENVIRONMENT" -auto-approve
+else
+  terraform apply -var="project_name=$PROJECT_NAME" -var="environment=$ENVIRONMENT" -auto-approve
+fi
+'''
+
+[tasks.get-terraform-outputs]
+description = "Get Terraform outputs"
+depends = ["terraform-apply"]
+run = '''
+cd terraform
+API_URL=$(terraform output -raw api_gateway_url)
+FRONTEND_BUCKET=$(terraform output -raw s3_frontend_bucket)
+CUSTOM_URL=$(terraform output -raw custom_domain_url 2>/dev/null || true)
+echo "API_URL=$API_URL"
+echo "FRONTEND_BUCKET=$FRONTEND_BUCKET"
+echo "CUSTOM_URL=$CUSTOM_URL"
+'''
+
+[tasks.build-frontend]
+description = "Build frontend with production environment"
+# depends = ["get-terraform-outputs"]
+run = '''
+cd frontend
+API_URL=$(cd ../terraform && terraform output -raw api_gateway_url)
+echo "NEXT_PUBLIC_API_URL=$API_URL" > .env.production
+bun install
+bun run build
+'''
+
+[tasks.deploy-frontend]
+description = "Deploy frontend to S3"
+depends = ["build-frontend"]
+run = '''
+cd frontend
+FRONTEND_BUCKET=$(cd ../terraform && terraform output -raw s3_frontend_bucket)
+aws s3 sync ./out "s3://$FRONTEND_BUCKET/" --delete
+'''
+
+[tasks.deploy-info]
+description = "Show deployment information"
+depends = ["terraform-apply"]
+run = '''
+API_URL=$(cd terraform && terraform output -raw api_gateway_url)
+CLOUDFRONT_URL=$(cd terraform && terraform output -raw cloudfront_url)
+CUSTOM_URL=$(cd terraform && terraform output -raw custom_domain_url 2>/dev/null || true)
+
+echo -e "\n✅ Deployment complete!"
+echo "🌐 CloudFront URL : $CLOUDFRONT_URL"
+if [ -n "$CUSTOM_URL" ]; then
+  echo "🔗 Custom domain  : $CUSTOM_URL"
+fi
+echo "📡 API Gateway    : $API_URL"
+'''
+
+[tasks.deploy]
+description = "Full deployment process"
+depends = [
+  "build-lambda",
+  "terraform-apply",
+  "deploy-frontend",
+  "deploy-info"
+]
+
+[tasks.deploy-backend]
+description = "Deploy backend only"
+depends = [
+  "build-lambda",
+  "terraform-apply"
+]
+
+[tasks.deploy-frontend-only]
+description = "Deploy frontend only"
+depends = [
+  "build-frontend",
+  "deploy-frontend"
+]
