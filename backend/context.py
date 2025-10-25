@@ -1,4 +1,4 @@
-from resources import linkedin, summary, facts, style
+from resources import linkedin, summary, facts, style, projects
 from datetime import datetime
 
 
@@ -25,6 +25,9 @@ Here are summary notes from {name}:
 
 Here is the LinkedIn profile of {name}:
 {linkedin}
+
+Other than the experience, {name} has also completed projects like:
+{projects}
 
 Here are some notes from {name} about their communications style:
 {style}

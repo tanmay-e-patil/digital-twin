@@ -40,16 +40,19 @@ export default function Twin() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("http://localhost:8000/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          message: input,
-          session_id: sessionId || undefined,
-        }),
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/chat`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            message: input,
+            session_id: sessionId || undefined,
+          }),
+        }
+      );
 
       if (!response.ok) throw new Error("Failed to send message");
 

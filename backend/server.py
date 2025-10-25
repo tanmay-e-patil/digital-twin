@@ -1,7 +1,8 @@
+from botocore.exceptions import ClientError
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from google import genai
+# from google import genai
 import os
 # from dotenv import load_dotenv
 from typing import Optional, List, Dict
@@ -9,6 +10,8 @@ import uuid
 import json
 import logging
 from pathlib import Path
+import boto3
+
 
 from langchain_google_genai import ChatGoogleGenerativeAI
 
@@ -47,12 +50,12 @@ app.add_middleware(
 )
 
 # Initialize Google AI client
-try:
-    client = genai.Client()
-    logger.info("Google AI client initialized successfully")
-except Exception as e:
-    logger.error(f"Error initializing Google AI client: {e}")
-    client = None
+# try:
+#     client = genai.Client()
+#     logger.info("Google AI client initialized successfully")
+# except Exception as e:
+#     logger.error(f"Error initializing Google AI client: {e}")
+#     client = None
 
 
 # Memory storage configuration
