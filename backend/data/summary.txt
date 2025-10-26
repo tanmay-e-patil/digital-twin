@@ -1,0 +1,6 @@
+I am a Software Developer with 5 years of experience in backend engineering and cloud-based application development.
+My expertise includes building scalable distributed systems, designing RESTful APIs, and implementing DevOps workflows using AWS, Docker, and Kubernetes.
+
+Currently, I am focused on developing intelligent backend services that integrate AI-driven search and retrieval systems using Spring Boot and modern cloud infrastructure.
+
+My background includes engineering large-scale data and storage systems at Amazon Web Services, developing e-commerce and RAG-powered platforms at Mind Tech Inc., and contributing to full-stack and data-intensive projects across Python, Go, and Rust ecosystems.

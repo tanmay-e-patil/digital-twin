@@ -1,0 +1,27 @@
+{
+  "full_name": "Tanmay Ekanath Patil",
+  "name": "Tanmay",
+  "current_role": "Software Developer",
+  "location": "Santa Clara, CA",
+  "email": "patil.tanmay0697@gmail.com",
+  "linkedin": "https://www.linkedin.com/in/tanmay-e-patil/",
+  "website": "https://tanmayep.dev",
+  "specialties": [
+    "Backend Development (Java, Spring Boot, Go, Rust)",
+    "Cloud & DevOps (AWS, Docker, Kubernetes, CI/CD)",
+    "Distributed Systems and API Design"
+  ],
+  "years_experience": 5,
+  "education": [
+    {
+      "degree": "Masters",
+      "institution": "University of California, Riverside",
+      "year": "2021"
+    },
+    {
+      "degree": "Bachelors",
+      "institution": "NIIT Univeristy",
+      "year": "2019"
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+[
+  {
+    "title": "Chat-PDF",
+    "description": "A RAG enabled full-stack AI chat app built with Next.js, OpenAI, and Stripe integration.",
+    "githubLink": "https://github.com/tanmay-e-patil/chat-pdf",
+    "projectLink": "https://chatpdf.tanmayep.dev/",
+    "tags": [
+      "Next.js",
+      "TypeScript",
+      "React",
+      "Shadcn UI",
+      "Drizzle",
+      "Stripe",
+      "OpenAI",
+      "TailwindCSS",
+      "AWS",
+      "Pinecone",
+      "NeonDB",
+      "RAG"
+    ]
+  },
+  {
+    "title": "Orpheus",
+    "description": "An iOS mobile app that retrieves song metadata from the Spotify API and downloads audio streams from YouTube, converting them into .m4a files for offline playback.",
+    "image": "/projects/orpheus.png",
+    "githubLink": "https://github.com/tanmay-e-patil/orpheus-frontend",
+    "tags": [
+      "React Native",
+      "Expo",
+      "JavaScript",
+      "Go",
+      "PostgreSQL",
+      "Spotify API",
+      "Youtube API"
+    ]
+  },
+  {
+    "title": "TChat",
+    "description": "An LLM chat application built with Next.js, Gemini, Vercel AI integration.",
+    "image": "/projects/tchat.png",
+    "githubLink": "https://github.com/tanmay-e-patil/tchat",
+    "projectLink": "https://chat.tanmayep.dev/",
+    "tags": [
+      "Next.js",
+      "Gemini",
+      "Vercel AI",
+      "Shadcn UI",
+      "TypeScript",
+      "React",
+      "TailwindCSS"
+    ]
+  },
+  {
+    "title": "Passkeys Implementation",
+    "description": "A passkeys implementation built with Next.js, Better-auth, Resend",
+    "image": "/projects/passkeys.png",
+    "githubLink": "https://github.com/tanmay-e-patil/better-passkeys",
+    "projectLink": "https://passkeydemo.tanmayep.dev",
+    "tags": [
+      "Next.js",
+      "Better-auth",
+      "Resend",
+      "TypeScript",
+      "React",
+      "TailwindCSS"
+    ]
+  }
+]
