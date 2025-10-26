@@ -14,6 +14,7 @@ export default function Twin() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   const [sessionId, setSessionId] = useState<string>("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -56,20 +57,75 @@ export default function Twin() {
 
       if (!response.ok) throw new Error("Failed to send message");
 
-      const data = await response.json();
+      // We'll create the assistant message only when we receive the first content
+      let assistantMessageId: string | null = null;
 
-      if (!sessionId) {
-        setSessionId(data.session_id);
+      // Handle streaming response
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let receivedSessionId = sessionId;
+      let buffer = '';
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || ''; // Keep the last incomplete line in buffer
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.slice(6));
+                
+                if (data.session_id && !receivedSessionId) {
+                  setSessionId(data.session_id);
+                  receivedSessionId = data.session_id;
+                }
+                
+                if (data.content) {
+                  // Create the assistant message only when we receive the first content
+                  if (!assistantMessageId) {
+                    setIsStreaming(true);
+                    assistantMessageId = (Date.now() + 1).toString();
+                    const assistantMessage: Message = {
+                      id: assistantMessageId,
+                      role: "assistant",
+                      content: data.content,
+                      timestamp: new Date(),
+                    };
+                    
+                    setMessages((prev) => [...prev, assistantMessage]);
+                  } else {
+                    // Update existing message
+                    setMessages((prev) =>
+                      prev.map((msg) =>
+                        msg.id === assistantMessageId
+                          ? { ...msg, content: msg.content + data.content }
+                          : msg
+                      )
+                    );
+                  }
+                }
+                
+                if (data.error) {
+                  throw new Error(data.error);
+                }
+                
+                if (data.done) {
+                  setIsLoading(false);
+                  setIsStreaming(false);
+                  return;
+                }
+              } catch (e) {
+                console.error("Error parsing SSE data:", e);
+              }
+            }
+          }
+        }
       }
-
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: "assistant",
-        content: data.response,
-        timestamp: new Date(),
-      };
-
-      setMessages((prev) => [...prev, assistantMessage]);
     } catch (error) {
       console.error("Error:", error);
       // Add error message
@@ -82,6 +138,7 @@ export default function Twin() {
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
+      setIsStreaming(false);
     }
   };
 
@@ -155,7 +212,7 @@ export default function Twin() {
           </div>
         ))}
 
-        {isLoading && (
+        {isLoading && !isStreaming && (
           <div className="flex gap-3 justify-start">
             <div className="flex-shrink-0">
               <div className="w-8 h-8 bg-slate-700 rounded-full flex items-center justify-center">
