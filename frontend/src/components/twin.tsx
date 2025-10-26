@@ -64,7 +64,7 @@ export default function Twin() {
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
       let receivedSessionId = sessionId;
-      let buffer = '';
+      let buffer = "";
 
       if (reader) {
         while (true) {
@@ -72,19 +72,19 @@ export default function Twin() {
           if (done) break;
 
           buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split('\n');
-          buffer = lines.pop() || ''; // Keep the last incomplete line in buffer
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || ""; // Keep the last incomplete line in buffer
 
           for (const line of lines) {
-            if (line.startsWith('data: ')) {
+            if (line.startsWith("data: ")) {
               try {
                 const data = JSON.parse(line.slice(6));
-                
+
                 if (data.session_id && !receivedSessionId) {
                   setSessionId(data.session_id);
                   receivedSessionId = data.session_id;
                 }
-                
+
                 if (data.content) {
                   // Create the assistant message only when we receive the first content
                   if (!assistantMessageId) {
@@ -96,7 +96,7 @@ export default function Twin() {
                       content: data.content,
                       timestamp: new Date(),
                     };
-                    
+
                     setMessages((prev) => [...prev, assistantMessage]);
                   } else {
                     // Update existing message
@@ -109,11 +109,11 @@ export default function Twin() {
                     );
                   }
                 }
-                
+
                 if (data.error) {
                   throw new Error(data.error);
                 }
-                
+
                 if (data.done) {
                   setIsLoading(false);
                   setIsStreaming(false);
@@ -157,7 +157,7 @@ export default function Twin() {
           <Bot className="w-6 h-6" />
           AI Digital Twin
         </h2>
-        <p className="text-sm text-slate-300 mt-1">Your AI course companion</p>
+        {/* <p className="text-sm text-slate-300 mt-1">Your AI course companion</p> */}
       </div>
 
       {/* Messages */}
@@ -165,8 +165,8 @@ export default function Twin() {
         {messages.length === 0 && (
           <div className="text-center text-gray-500 mt-8">
             <Bot className="w-12 h-12 mx-auto mb-3 text-gray-400" />
-            <p>Hello! I&apos;m your Digital Twin.</p>
-            <p className="text-sm mt-2">Ask me anything about AI deployment!</p>
+            <p>Hello! I&apos;m Tanmay's Digital Twin.</p>
+            <p className="text-sm mt-2">Ask me anything about Tanmay!</p>
           </div>
         )}
 
