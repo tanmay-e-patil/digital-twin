@@ -1,5 +1,5 @@
 from botocore.exceptions import ClientError
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -18,7 +18,6 @@ import asyncio
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 from context import prompt
-from cache import semantic_cache, log_cache_hit, log_cache_miss, log_cache_store, get_cache_performance_metrics, get_cache_health_status
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -147,44 +146,6 @@ async def chat_stream(request: ChatRequest):
         session_id = request.session_id or str(uuid.uuid4())
         logger.info(f"Processing streaming chat request for session: {session_id}")
         
-        # Check cache first
-        cached_response = semantic_cache.search_similar(request.message)
-        if cached_response:
-            log_cache_hit(request.message, "semantic_cache")
-            
-            async def generate_cached_response() -> AsyncGenerator[str, None]:
-                """Generate streaming response from cache"""
-                try:
-                    # Simulate streaming for cached response
-                    for char in cached_response:
-                        yield f"data: {json.dumps({'content': char, 'session_id': session_id, 'cached': True})}\n\n"
-                        await asyncio.sleep(0.01)
-                    
-                    # Update conversation history
-                    conversation = load_conversation(session_id)
-                    conversation.append({"role": "user", "content": request.message})
-                    conversation.append({"role": "assistant", "content": cached_response})
-                    save_conversation(session_id, conversation)
-                    
-                    yield f"data: {json.dumps({'done': True, 'session_id': session_id, 'cached': True})}\n\n"
-                    
-                except Exception as e:
-                    logger.error(f"Error in cached streaming response: {e}")
-                    yield f"data: {json.dumps({'error': str(e)})}\n\n"
-            
-            return StreamingResponse(
-                generate_cached_response(),
-                media_type="text/event-stream",
-                headers={
-                    "Cache-Control": "no-cache",
-                    "Connection": "keep-alive",
-                    "Access-Control-Allow-Origin": "*",
-                    "Access-Control-Allow-Headers": "*",
-                }
-            )
-        
-        log_cache_miss(request.message)
-        
         conversation = load_conversation(session_id)
         # Build messages with history
         messages = [{"role": "system", "content": prompt()}]
@@ -214,7 +175,7 @@ async def chat_stream(request: ChatRequest):
                             # Stream each token/character as it comes
                             for char in chunk.content:
                                 response_content += char
-                                yield f"data: {json.dumps({'content': char, 'session_id': session_id, 'cached': False})}\n\n"
+                                yield f"data: {json.dumps({'content': char, 'session_id': session_id})}\n\n"
                                 await asyncio.sleep(0.01)  # Small delay for token-level streaming effect
                 else:
                     # Fallback to regular invoke and simulate streaming
@@ -223,12 +184,8 @@ async def chat_stream(request: ChatRequest):
                     
                     # Simulate token-level streaming by sending individual characters
                     for char in response.text:
-                        yield f"data: {json.dumps({'content': char, 'session_id': session_id, 'cached': False})}\n\n"
+                        yield f"data: {json.dumps({'content': char, 'session_id': session_id})}\n\n"
                         await asyncio.sleep(0.001)  # Small delay to simulate streaming
-                
-                # Store in cache
-                semantic_cache.store(request.message, response_content)
-                log_cache_store(request.message, len(response_content))
                 
                 # Update conversation history with the complete response
                 conversation.append({"role": "user", "content": request.message})
@@ -238,7 +195,7 @@ async def chat_stream(request: ChatRequest):
                 save_conversation(session_id, conversation)
                 
                 # Send completion signal
-                yield f"data: {json.dumps({'done': True, 'session_id': session_id, 'cached': False})}\n\n"
+                yield f"data: {json.dumps({'done': True, 'session_id': session_id})}\n\n"
                 
                 logger.info(f"Streaming chat response sent for session: {session_id}")
                 
@@ -286,39 +243,6 @@ async def get_conversation(session_id: str):
     try:
         conversation = load_conversation(session_id)
         return {"session_id": session_id, "messages": conversation}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/cache/stats")
-async def get_cache_stats():
-    """Get cache statistics"""
-    try:
-        return semantic_cache.get_stats()
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/cache/health")
-async def cache_health_check():
-    """Check cache health status"""
-    try:
-        return get_cache_health_status()
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/cache/clear")
-async def clear_cache():
-    """Clear all cache entries"""
-    try:
-        success = semantic_cache.clear()
-        return {"success": success, "message": "Cache cleared" if success else "Failed to clear cache"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/cache/performance")
-async def get_cache_performance():
-    """Get comprehensive cache performance metrics"""
-    try:
-        return get_cache_performance_metrics()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

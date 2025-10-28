@@ -46,10 +46,6 @@ def main():
         if os.path.exists(file):
             shutil.copy2(file, "lambda-package/")
     
-    # Copy cache module
-    if os.path.exists("cache"):
-        shutil.copytree("cache", "lambda-package/cache")
-    
     # Copy data directory
     if os.path.exists("data"):
         shutil.copytree("data", "lambda-package/data")
