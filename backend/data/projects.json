@@ -1,68 +1,137 @@
-[
-  {
-    "title": "Chat-PDF",
-    "description": "A RAG enabled full-stack AI chat app built with Next.js, OpenAI, and Stripe integration.",
-    "githubLink": "https://github.com/tanmay-e-patil/chat-pdf",
-    "projectLink": "https://chatpdf.tanmayep.dev/",
-    "tags": [
-      "Next.js",
-      "TypeScript",
-      "React",
-      "Shadcn UI",
-      "Drizzle",
-      "Stripe",
-      "OpenAI",
-      "TailwindCSS",
-      "AWS",
-      "Pinecone",
-      "NeonDB",
-      "RAG"
-    ]
-  },
-  {
-    "title": "Orpheus",
-    "description": "An iOS mobile app that retrieves song metadata from the Spotify API and downloads audio streams from YouTube, converting them into .m4a files for offline playback.",
-    "image": "/projects/orpheus.png",
-    "githubLink": "https://github.com/tanmay-e-patil/orpheus-frontend",
-    "tags": [
-      "React Native",
-      "Expo",
-      "JavaScript",
-      "Go",
-      "PostgreSQL",
-      "Spotify API",
-      "Youtube API"
-    ]
-  },
-  {
-    "title": "TChat",
-    "description": "An LLM chat application built with Next.js, Gemini, Vercel AI integration.",
-    "image": "/projects/tchat.png",
-    "githubLink": "https://github.com/tanmay-e-patil/tchat",
-    "projectLink": "https://chat.tanmayep.dev/",
-    "tags": [
-      "Next.js",
-      "Gemini",
-      "Vercel AI",
-      "Shadcn UI",
-      "TypeScript",
-      "React",
-      "TailwindCSS"
-    ]
-  },
-  {
-    "title": "Passkeys Implementation",
-    "description": "A passkeys implementation built with Next.js, Better-auth, Resend",
-    "image": "/projects/passkeys.png",
-    "githubLink": "https://github.com/tanmay-e-patil/better-passkeys",
-    "projectLink": "https://passkeydemo.tanmayep.dev",
-    "tags": [
-      "Next.js",
-      "Better-auth",
-      "Resend",
-      "TypeScript",
-      "React",
-      "TailwindCSS"
-    ]
-  }
-]
+{
+  "professional": [
+    {
+      "title": "Digital Twin",
+      "description": "An AI digital twin trained on my professional experience, projects, and technical expertise in backend development, distributed systems, and cloud engineering.",
+      "image": "/projects/digital-twin.png",
+      "githubLink": "https://github.com/tanmay-e-patil/digital-twin",
+      "projectLink": "https://digitaltwin.tanmayep.dev",
+      "tags": [
+        "AWS",
+        "Terraform",
+        "Python",
+        "FastAPI",
+        "Next.js",
+        "LangChain",
+        "Lambda",
+        "CloudFront"
+      ]
+    },
+    {
+      "title": "T3 Chat Clone",
+      "description": "A modern, full-stack AI chatbot built with Next.js 15 and Google's Gemini AI model. Supports real-time chat, authentication with Better-auth, conversation history, and usage tracking.",
+      "image": "/projects/t3chat.png",
+      "githubLink": "https://github.com/tanmay-e-patil/tchat",
+      "projectLink": "https://chat.tanmayep.dev/",
+      "tags": [
+        "Next.js",
+        "TypeScript",
+        "PostgreSQL",
+        "Vercel",
+        "Gemini AI",
+        "Better-auth",
+        "Cursor"
+      ]
+    },
+    {
+      "title": "Chat-PDF",
+      "description": "A full-stack web application enabling users to interact with PDFs using a RAG pipeline powered by OpenAI’s GPT-4o-mini for intelligent document querying, integrated with Stripe for payment processing and subscription management.",
+      "image": "/projects/chatpdf.png",
+      "githubLink": "https://github.com/tanmay-e-patil/chat-pdf",
+      "projectLink": "https://chatpdf.tanmayep.dev/",
+      "tags": [
+        "Next.js",
+        "TypeScript",
+        "Stripe API",
+        "OpenAI API",
+        "NeonDB",
+        "PineconeDB",
+        "AWS",
+        "S3",
+        "RAG"
+      ]
+    },
+    {
+      "title": "Orpheus",
+      "description": "An iOS mobile app that retrieves song metadata from the Spotify API and downloads audio streams from YouTube, converting them into .m4a files for offline playback. Includes secure authentication workflows.",
+      "image": "/projects/orpheus.png",
+      "githubLink": "https://github.com/tanmay-e-patil/orpheus-frontend",
+      "tags": [
+        "React Native",
+        "Expo",
+        "JavaScript",
+        "Go",
+        "PostgreSQL",
+        "Spotify API",
+        "YouTube API"
+      ]
+    },
+    {
+      "title": "Passkeys Implementation",
+      "description": "A passkey-based authentication system built with Next.js, Better-auth, and Resend for passwordless login workflows.",
+      "image": "/projects/passkeys.png",
+      "githubLink": "https://github.com/tanmay-e-patil/better-passkeys",
+      "projectLink": "https://passkeydemo.tanmayep.dev",
+      "tags": [
+        "Next.js",
+        "Better-auth",
+        "Resend",
+        "TypeScript",
+        "React",
+        "TailwindCSS"
+      ]
+    }
+  ],
+  "academic": [
+    {
+      "title": "Network Intrusion Detection",
+      "description": "Developed a multilayer perceptron model to classify various types of network attacks for cybersecurity applications.",
+      "tags": ["Machine Learning", "Python", "TensorFlow", "Security"]
+    },
+    {
+      "title": "Fake Job Postings Prediction",
+      "description": "Built LSTM and neural network models to predict fraudulent job postings using natural language patterns and metadata.",
+      "tags": ["LSTM", "Machine Learning", "Python", "NLP"]
+    },
+    {
+      "title": "Traffic Signal Control",
+      "description": "Simulated urban traffic and applied the A3C reinforcement learning algorithm in SUMO to optimize signal switching and reduce congestion.",
+      "tags": ["Reinforcement Learning", "SUMO", "A3C", "Python"]
+    },
+    {
+      "title": "Recommender Systems",
+      "description": "Developed movie, book, and PC part recommenders using content-based and collaborative filtering techniques.",
+      "tags": [
+        "Recommender Systems",
+        "Collaborative Filtering",
+        "Python",
+        "Scikit-learn"
+      ]
+    },
+    {
+      "title": "Face Recognition",
+      "description": "Implemented a deep learning-based face recognition system using OpenCV and CNNs for identity verification.",
+      "tags": ["Deep Learning", "OpenCV", "CNN", "Python"]
+    },
+    {
+      "title": "CoinAge",
+      "description": "Developed a web application displaying real-time stock market data using Apache Kafka and Alpha Vantage API.",
+      "tags": ["Kafka", "API Integration", "Web Development", "JavaScript"]
+    },
+    {
+      "title": "Weather Prediction Model",
+      "description": "Built a fully connected neural network to predict humidity and temperature using historical weather data from Delhi.",
+      "tags": ["Neural Networks", "Machine Learning", "Kaggle Dataset"]
+    },
+    {
+      "title": "Self-driving RC Car App",
+      "description": "Developed an Android app that collects GPS and camera data from a phone and transmits it to Google Cloud Storage for processing.",
+      "tags": ["Android", "XML", "Google Cloud", "IoT"]
+    },
+    {
+      "title": "Halite II Programming Challenge",
+      "description": "Created a game bot that ranked in the top 20% globally (791/5832) by optimizing real-time strategic decisions.",
+      "tags": ["AI", "Game Development", "Python"]
+    }
+  ]
+}
