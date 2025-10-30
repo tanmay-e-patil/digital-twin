@@ -30,7 +30,7 @@ RUN adduser --disabled-password --gecos '' appuser && \
     chown -R appuser:appuser /app
 USER appuser
 
-RUN mkdir -p app/memory && \
+RUN mkdir -p /app/memory && \
     chown -R appuser:appuser /app/memory
 
 # Expose port
