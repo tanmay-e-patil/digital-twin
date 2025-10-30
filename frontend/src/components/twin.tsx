@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Send, Bot, User } from "lucide-react";
+import { Response } from "./ai-elements/response";
 
 interface Message {
   id: string;
@@ -185,21 +186,26 @@ export default function Twin() {
               </div>
             )}
 
-            <div
-              className={`max-w-[70%] rounded-lg p-3 ${
-                message.role === "user"
-                  ? "bg-slate-700 text-white"
-                  : "bg-white border border-gray-200 text-gray-800"
-              }`}
-            >
-              <p className="whitespace-pre-wrap">{message.content}</p>
-              <p
-                className={`text-xs mt-1 ${
-                  message.role === "user" ? "text-slate-300" : "text-gray-500"
+            <div>
+              <div
+                className={`max-w-[85%] rounded-lg p-3 ${
+                  message.role === "user"
+                    ? "bg-slate-700 text-white min-w-[100px]"
+                    : "bg-white border border-gray-200 text-gray-800"
                 }`}
               >
-                {message.timestamp.toLocaleTimeString()}
-              </p>
+                <Response className="">{message.content}</Response>
+                <p
+                  className={`text-xs mt-1 ${
+                    message.role === "user" ? "text-slate-300" : "text-gray-500"
+                  }`}
+                >
+                  {message.timestamp.toLocaleTimeString(undefined, {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </p>
+              </div>
             </div>
 
             {message.role === "user" && (
