@@ -19,9 +19,22 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 
 from context import prompt
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
+# Configure logging with more detailed format
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler('/app/app.log') if os.path.exists('/app') else logging.NullHandler()
+    ]
+)
 logger = logging.getLogger(__name__)
+
+# Check for required environment variables
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+if not GOOGLE_API_KEY:
+    logger.error("GOOGLE_API_KEY environment variable is not set")
+    # We'll continue without the LLM but log the error
 
 try:
     llm = ChatGoogleGenerativeAI(
@@ -30,11 +43,12 @@ try:
         max_tokens=None,
         timeout=None,
         max_retries=2,
-        # other params...
+        api_key=GOOGLE_API_KEY,
     )
     logger.info("LLM initialized successfully")
 except Exception as e:
     logger.error(f"Error initializing LLM: {e}")
+    logger.error("Please ensure GOOGLE_API_KEY is set correctly")
     llm = None
 
 
@@ -141,10 +155,15 @@ async def health_check():
 @app.post("/chat")
 async def chat_stream(request: ChatRequest):
     """Streaming chat endpoint using Server-Sent Events"""
+    session_id = None
     try:
         # Generate session ID if not provided
         session_id = request.session_id or str(uuid.uuid4())
         logger.info(f"Processing streaming chat request for session: {session_id}")
+        
+        # Validate input
+        if not request.message or not request.message.strip():
+            raise HTTPException(status_code=400, detail="Message cannot be empty")
         
         conversation = load_conversation(session_id)
         # Build messages with history
@@ -160,9 +179,12 @@ async def chat_stream(request: ChatRequest):
 
         async def generate_stream() -> AsyncGenerator[str, None]:
             """Generate streaming response"""
+            nonlocal session_id
             try:
                 if llm is None:
-                    yield f"data: {json.dumps({'error': 'LLM not initialized properly'})}\n\n"
+                    error_msg = "LLM not initialized properly. Please check server logs and API key configuration."
+                    logger.error(error_msg)
+                    yield f"data: {json.dumps({'error': error_msg})}\n\n"
                     return
                 
                 # Get streaming response from LLM
@@ -191,17 +213,24 @@ async def chat_stream(request: ChatRequest):
                 conversation.append({"role": "user", "content": request.message})
                 conversation.append({"role": "assistant", "content": response_content})
                 
-                # Save updated conversation
-                save_conversation(session_id, conversation)
+                # Save updated conversation with error handling
+                try:
+                    save_conversation(session_id, conversation)
+                except Exception as save_error:
+                    logger.error(f"Error saving conversation: {save_error}")
+                    # Continue with the response even if saving fails
                 
                 # Send completion signal
                 yield f"data: {json.dumps({'done': True, 'session_id': session_id})}\n\n"
                 
                 logger.info(f"Streaming chat response sent for session: {session_id}")
                 
+            except asyncio.CancelledError:
+                logger.info(f"Stream cancelled for session: {session_id}")
+                raise
             except Exception as e:
-                logger.error(f"Error in streaming response: {e}")
-                yield f"data: {json.dumps({'error': str(e)})}\n\n"
+                logger.error(f"Error in streaming response for session {session_id}: {str(e)}", exc_info=True)
+                yield f"data: {json.dumps({'error': f'Streaming error: {str(e)}'})}\n\n"
         
         return StreamingResponse(
             generate_stream(),
@@ -214,39 +243,68 @@ async def chat_stream(request: ChatRequest):
             }
         )
         
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is
+        raise
     except Exception as e:
-        logger.error(f"Unexpected error in streaming chat endpoint: {e}")
+        logger.error(f"Unexpected error in streaming chat endpoint: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
 
 @app.get("/sessions")
 async def list_sessions():
     """List all conversation sessions"""
-    sessions = []
-    memory_path = Path(MEMORY_DIR)
-    if not memory_path.exists():
-        memory_path.mkdir(parents=True, exist_ok=True)
-    
-    for file_path in memory_path.glob("*.json"):
-        session_id = file_path.stem
-        with open(file_path, "r", encoding="utf-8") as f:
-            conversation = json.load(f)
-            sessions.append({
-                "session_id": session_id,
-                "message_count": len(conversation),
-                "last_message": conversation[-1]["content"] if conversation else None
-            })
-    return {"sessions": sessions}
+    try:
+        sessions = []
+        memory_path = Path(MEMORY_DIR)
+        if not memory_path.exists():
+            memory_path.mkdir(parents=True, exist_ok=True)
+        
+        for file_path in memory_path.glob("*.json"):
+            try:
+                session_id = file_path.stem
+                with open(file_path, "r", encoding="utf-8") as f:
+                    conversation = json.load(f)
+                    sessions.append({
+                        "session_id": session_id,
+                        "message_count": len(conversation),
+                        "last_message": conversation[-1]["content"] if conversation else None
+                    })
+            except (json.JSONDecodeError, IOError) as e:
+                logger.error(f"Error reading session file {file_path}: {e}")
+                continue
+        return {"sessions": sessions}
+    except Exception as e:
+        logger.error(f"Error listing sessions: {e}")
+        raise HTTPException(status_code=500, detail=f"Error listing sessions: {str(e)}")
 
 @app.get("/conversation/{session_id}")
 async def get_conversation(session_id: str):
     """Retrieve conversation history"""
     try:
+        if not session_id or not session_id.strip():
+            raise HTTPException(status_code=400, detail="Session ID cannot be empty")
+        
         conversation = load_conversation(session_id)
         return {"session_id": session_id, "messages": conversation}
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error retrieving conversation for session {session_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Error retrieving conversation: {str(e)}")
 
 
 if __name__ == "__main__":
     import uvicorn
+    import signal
+    import sys
+    
+    def signal_handler(sig, frame):
+        logger.info(f"Received signal {sig}, shutting down gracefully...")
+        sys.exit(0)
+    
+    # Register signal handlers for graceful shutdown
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+    
+    logger.info("Starting FastAPI server...")
     uvicorn.run(app, host="0.0.0.0", port=8000)
