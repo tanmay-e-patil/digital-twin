@@ -28,10 +28,13 @@ COPY . .
 # Create a non-root user
 RUN adduser --disabled-password --gecos '' appuser && \
     chown -R appuser:appuser /app
-USER appuser
 
 RUN mkdir -p /app/memory && \
     chown -R appuser:appuser /app/memory
+    
+USER appuser
+
+
 
 # Expose port
 EXPOSE 8000
