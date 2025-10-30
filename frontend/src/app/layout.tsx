@@ -84,6 +84,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <script
+          src="https://rybbit.tanmayep.dev/api/script.js"
+          data-site-id="1"
+          defer
+        ></script>
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
