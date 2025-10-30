@@ -44,7 +44,7 @@ export const metadata: Metadata = {
     title: "Tanmay Ekanath Patil - Software Developer",
     description:
       "Software Developer with 5 years of experience in backend engineering, cloud-based applications, and distributed systems.",
-    url: "https://tanmayep.dev",
+    url: "https://digitaltwin.tanmayep.dev",
     siteName: "Tanmay Ekanath Patil",
     locale: "en_US",
     type: "website",
