@@ -26,13 +26,13 @@ RUN pip install --no-cache-dir --upgrade pip && \
 COPY . .
 
 # Create a non-root user
-RUN adduser --disabled-password --gecos '' appuser && \
-    chown -R appuser:appuser /app
+# RUN adduser --disabled-password --gecos '' appuser && \
+#     chown -R appuser:appuser /app
 
-RUN mkdir -p /app/memory && \
-    chown -R appuser:appuser /app/memory
-    
-USER appuser
+# RUN mkdir -p /app/memory && \
+#     chown -R appuser:appuser /app/memory
+
+# USER appuser
 
 
 
