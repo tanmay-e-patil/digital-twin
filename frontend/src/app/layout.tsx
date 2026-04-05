@@ -87,7 +87,7 @@ export default function RootLayout({
       <head>
         <script
           src="https://rybbit.tanmayep.dev/api/script.js"
-          data-site-id="1"
+          data-site-id="2"
           defer
         ></script>
       </head>
