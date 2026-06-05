@@ -7,8 +7,7 @@ memory/*
 .terraform.lock.hcl
 terraform.tfstate.d/
 *.tfvars
-!terraform.tfvars
-!prod.tfvars
+!*.tfvars.example
 
 # Lambda packages
 lambda-deployment.zip
@@ -17,6 +16,11 @@ lambda-package/
 # Environment files
 .env
 .env.*
+!.env.example
+
+# Secret-management local config
+.infisical.json
+**/.infisical.json
 
 # Node
 node_modules/
@@ -27,7 +31,6 @@ out/
 __pycache__/
 *.pyc
 .venv/
-uv.lock
 
 # IDE
 .vscode/
