@@ -1,8 +1,19 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, Bot, User } from "lucide-react";
-import { Response } from "./ai-elements/response";
+import { Send, Bot, User, Sparkles, ChevronDown } from "lucide-react";
+import { Avatar } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 
 interface Message {
   id: string;
@@ -17,10 +28,19 @@ export default function Twin() {
   const [isLoading, setIsLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [sessionId, setSessionId] = useState<string>("");
+  const [showScrollButton, setShowScrollButton] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    setShowScrollButton(false);
+  };
+
+  const handleMessagesScroll = () => {
+    const el = messagesContainerRef.current;
+    if (!el) return;
+    setShowScrollButton(el.scrollHeight - el.scrollTop - el.clientHeight > 80);
   };
 
   useEffect(() => {
@@ -58,10 +78,7 @@ export default function Twin() {
 
       if (!response.ok) throw new Error("Failed to send message");
 
-      // We'll create the assistant message only when we receive the first content
       let assistantMessageId: string | null = null;
-
-      // Handle streaming response
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
       let receivedSessionId = sessionId;
@@ -74,7 +91,7 @@ export default function Twin() {
 
           buffer += decoder.decode(value, { stream: true });
           const lines = buffer.split("\n");
-          buffer = lines.pop() || ""; // Keep the last incomplete line in buffer
+          buffer = lines.pop() || "";
 
           for (const line of lines) {
             if (line.startsWith("data: ")) {
@@ -87,20 +104,19 @@ export default function Twin() {
                 }
 
                 if (data.content) {
-                  // Create the assistant message only when we receive the first content
                   if (!assistantMessageId) {
                     setIsStreaming(true);
                     assistantMessageId = (Date.now() + 1).toString();
-                    const assistantMessage: Message = {
-                      id: assistantMessageId,
-                      role: "assistant",
-                      content: data.content,
-                      timestamp: new Date(),
-                    };
-
-                    setMessages((prev) => [...prev, assistantMessage]);
+                    setMessages((prev) => [
+                      ...prev,
+                      {
+                        id: assistantMessageId!,
+                        role: "assistant",
+                        content: data.content,
+                        timestamp: new Date(),
+                      },
+                    ]);
                   } else {
-                    // Update existing message
                     setMessages((prev) =>
                       prev.map((msg) =>
                         msg.id === assistantMessageId
@@ -111,9 +127,7 @@ export default function Twin() {
                   }
                 }
 
-                if (data.error) {
-                  throw new Error(data.error);
-                }
+                if (data.error) throw new Error(data.error);
 
                 if (data.done) {
                   setIsLoading(false);
@@ -129,14 +143,15 @@ export default function Twin() {
       }
     } catch (error) {
       console.error("Error:", error);
-      // Add error message
-      const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: "assistant",
-        content: "Sorry, I encountered an error. Please try again.",
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, errorMessage]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: (Date.now() + 1).toString(),
+          role: "assistant",
+          content: "Sorry, I encountered an error. Please try again.",
+          timestamp: new Date(),
+        },
+      ]);
     } finally {
       setIsLoading(false);
       setIsStreaming(false);
@@ -151,114 +166,118 @@ export default function Twin() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-gray-50 rounded-lg shadow-lg">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-slate-700 to-slate-800 text-white p-4 rounded-t-lg">
-        <h2 className="text-xl font-semibold flex items-center gap-2">
-          <Bot className="w-6 h-6" />
-          AI Digital Twin
-        </h2>
-        {/* <p className="text-sm text-slate-300 mt-1">Your AI course companion</p> */}
-      </div>
+    <Card className="relative flex h-full flex-col overflow-hidden shadow-2xl shadow-black/40">
+      <CardHeader className="border-b border-border bg-secondary/70">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <CardTitle className="flex items-center gap-2 text-[#fbf1c7]">
+              <Bot className="h-6 w-6 text-primary" />
+              Tanmay&apos;s Digital Twin
+            </CardTitle>
+            <CardDescription>Ask about Tanmay&apos;s work, projects, and technical experience.</CardDescription>
+          </div>
+          <Badge className="gap-1">
+            <Sparkles className="h-3 w-3" /> Live chat
+          </Badge>
+        </div>
+      </CardHeader>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <CardContent
+        ref={messagesContainerRef}
+        onScroll={handleMessagesScroll}
+        className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-4 pt-6"
+      >
         {messages.length === 0 && (
-          <div className="text-center text-gray-500 mt-8">
-            <Bot className="w-12 h-12 mx-auto mb-3 text-gray-400" />
-            <p>Hello! I&apos;m Tanmay&apos;s Digital Twin.</p>
-            <p className="text-sm mt-2">Ask me anything about Tanmay!</p>
+          <div className="mx-auto mt-16 max-w-sm rounded-xl border border-border bg-muted/60 p-6 text-center text-muted-foreground">
+            <Bot className="mx-auto mb-3 h-12 w-12 text-primary" />
+            <p className="font-medium text-foreground">Hello! I&apos;m Tanmay&apos;s Digital Twin.</p>
+            <p className="mt-2 text-sm">Ask me anything about Tanmay.</p>
           </div>
         )}
 
         {messages.map((message) => (
           <div
             key={message.id}
-            className={`flex gap-3 ${
-              message.role === "user" ? "justify-end" : "justify-start"
-            }`}
+            className={`flex gap-3 ${message.role === "user" ? "justify-end" : "justify-start"}`}
           >
             {message.role === "assistant" && (
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-slate-700 rounded-full flex items-center justify-center">
-                  <Bot className="w-5 h-5 text-white" />
-                </div>
-              </div>
+              <Avatar>
+                <Bot className="h-5 w-5 text-primary" />
+              </Avatar>
             )}
 
-            <div>
+            <div className={`flex max-w-[75%] flex-col ${message.role === "user" ? "items-end text-right" : "items-start text-left"}`}>
               <div
-                className={`max-w-[85%] rounded-lg p-3 ${
+                className={`w-fit max-w-full rounded-xl border px-3 py-2 shadow-sm ${
                   message.role === "user"
-                    ? "bg-slate-700 text-white min-w-[100px]"
-                    : "bg-white border border-gray-200 text-gray-800"
+                    ? "border-accent/50 bg-accent text-accent-foreground"
+                    : "border-border bg-muted text-foreground"
                 }`}
               >
-                <Response className="">{message.content}</Response>
-                <p
-                  className={`text-xs mt-1 ${
-                    message.role === "user" ? "text-slate-300" : "text-gray-500"
-                  }`}
-                >
-                  {message.timestamp.toLocaleTimeString(undefined, {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </p>
+                <p className="whitespace-pre-wrap text-sm leading-6">{message.content}</p>
               </div>
+              <p className="mt-1 px-1 text-xs text-muted-foreground">
+                {message.timestamp.toLocaleTimeString(undefined, {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </p>
             </div>
 
             {message.role === "user" && (
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center">
-                  <User className="w-5 h-5 text-white" />
-                </div>
-              </div>
+              <Avatar className="bg-accent">
+                <User className="h-5 w-5 text-accent-foreground" />
+              </Avatar>
             )}
           </div>
         ))}
 
         {isLoading && !isStreaming && (
-          <div className="flex gap-3 justify-start">
-            <div className="flex-shrink-0">
-              <div className="w-8 h-8 bg-slate-700 rounded-full flex items-center justify-center">
-                <Bot className="w-5 h-5 text-white" />
-              </div>
-            </div>
-            <div className="bg-white border border-gray-200 rounded-lg p-3">
+          <div className="flex justify-start gap-3">
+            <Avatar>
+              <Bot className="h-5 w-5 text-primary" />
+            </Avatar>
+            <div className="rounded-xl border border-border bg-muted p-3">
               <div className="flex space-x-2">
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-100" />
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-200" />
+                <div className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground" />
+                <div className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground delay-100" />
+                <div className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground delay-200" />
               </div>
             </div>
           </div>
         )}
 
-        <div ref={messagesEndRef} />
-      </div>
+        {showScrollButton && (
+          <div className="sticky bottom-0 flex justify-center">
+            <button
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-background/40 text-white shadow-sm backdrop-blur hover:bg-white/10"
+              onClick={scrollToBottom}
+              aria-label="Scroll to bottom"
+            >
+              <ChevronDown className="h-5 w-5" />
+            </button>
+          </div>
+        )}
 
-      {/* Input */}
-      <div className="border-t border-gray-200 p-4 bg-white rounded-b-lg">
-        <div className="flex gap-2">
-          <input
+        <div ref={messagesEndRef} />
+      </CardContent>
+
+      <CardFooter className="border-t border-border bg-secondary/60 p-2">
+        <div className="flex w-full items-center gap-2">
+          <Input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyPress}
-            placeholder="Type your message..."
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-transparent text-gray-800"
+            placeholder="Ask about Tanmay..."
             disabled={isLoading}
+            className="h-9"
           />
-          <button
-            onClick={sendMessage}
-            disabled={!input.trim() || isLoading}
-            className="px-4 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            <Send className="w-5 h-5" />
-          </button>
+          <Button className="h-9 shrink-0 px-3" onClick={sendMessage} disabled={!input.trim() || isLoading} aria-label="Send message">
+            <Send className="h-5 w-5" />
+          </Button>
         </div>
-      </div>
-    </div>
+      </CardFooter>
+    </Card>
   );
 }

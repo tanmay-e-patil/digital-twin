@@ -1,47 +1,45 @@
-import Twin from "@/components/twin";
 import Link from "next/link";
+import Twin from "@/components/twin";
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-100">
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl font-bold text-center text-gray-800 mb-2">
-            Tanmay Ekanath Patil
+    <main className="h-screen overflow-hidden bg-[radial-gradient(circle_at_top,#3c3836_0,#1d2021_42rem)] px-4 py-4 text-foreground">
+      <section className="mx-auto flex h-full max-w-5xl flex-col gap-4">
+        <div className="mx-auto max-w-3xl space-y-2 text-center">
+          <p className="text-sm font-medium uppercase tracking-[0.25em] text-primary">
+            Tanmay Patil | AI Engineer
+          </p>
+          <h1 className="text-4xl font-bold tracking-tight text-[#fbf1c7] sm:text-5xl">
+            AI Digital Twin
           </h1>
-          <p className="text-center text-gray-600 mb-8">
-            Software Developer | Backend Engineer | Cloud Architect
+          <p className="text-muted-foreground">
+            Ask my AI twin about my work, projects, and technical experience.
           </p>
-          <p className="text-center text-gray-500 mb-8 max-w-2xl mx-auto">
-            Interact with my AI digital twin - trained on my professional experience,
-            projects, and technical expertise in backend development, distributed systems,
-            and cloud engineering.
-          </p>
-
-          <div className="h-[600px]">
-            <Twin />
-          </div>
-
-          <footer className="mt-8 text-center text-xs text-gray-500">
-            <p>
-              © {new Date().getFullYear()}{" "}
-              <span className="hover:text-gray-700">
-                <Link href={"https://tanmayep.dev"}>tanmayep.dev</Link>
-              </span>
-              {". "}
-              All rights reserved.
-            </p>
-            <div className="mt-2 space-x-4">
-              <a href="#" className="hover:text-gray-700">
-                Terms of Service
-              </a>
-              <a href="#" className="hover:text-gray-700">
-                Privacy
-              </a>
-            </div>
-          </footer>
         </div>
-      </div>
+
+        <div className="min-h-0 flex-1">
+          <Twin />
+        </div>
+
+        <footer className="text-center text-xs text-muted-foreground">
+          <p>
+            © {new Date().getFullYear()}{" "}
+            <Link href="https://tanmayep.dev" className="hover:text-primary">
+              tanmayep.dev
+            </Link>
+            {". "}
+            All rights reserved.
+          </p>
+          <div className="mt-2 space-x-4">
+            <a href="#" className="hover:text-primary">
+              Terms of Service
+            </a>
+            <a href="#" className="hover:text-primary">
+              Privacy
+            </a>
+          </div>
+        </footer>
+      </section>
     </main>
   );
 }

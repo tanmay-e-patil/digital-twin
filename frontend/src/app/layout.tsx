@@ -15,14 +15,14 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Tanmay Patil - Digital Twin",
   description:
-    "Software Developer with 5 years of experience in backend engineering, cloud-based applications, and distributed systems. Specializing in Java, Spring Boot, Go, Rust, AWS, Docker, and Kubernetes.",
+    "AI digital twin for Tanmay Patil, AI engineer with backend, cloud, and distributed systems experience.",
   keywords: [
-    "Software Developer",
+    "Tanmay Patil",
+    "AI Engineer",
+    "AI Digital Twin",
     "Backend Development",
     "Cloud Engineering",
-    "DevOps",
     "Distributed Systems",
-    "API Design",
     "Java",
     "Spring Boot",
     "Go",
@@ -30,22 +30,20 @@ export const metadata: Metadata = {
     "AWS",
     "Docker",
     "Kubernetes",
-    "CI/CD",
-    "Full-stack Development",
   ],
-  authors: [{ name: "Tanmay Ekanath Patil" }],
-  creator: "Tanmay Ekanath Patil",
+  authors: [{ name: "Tanmay Patil" }],
+  creator: "Tanmay Patil",
   icons: {
     icon: "/profile.jpeg",
     shortcut: "/profile.jpeg",
     apple: "/profile.jpeg",
   },
   openGraph: {
-    title: "Tanmay Ekanath Patil - Software Developer",
+    title: "Tanmay Patil - AI Digital Twin",
     description:
-      "Software Developer with 5 years of experience in backend engineering, cloud-based applications, and distributed systems.",
+      "Interact with Tanmay Patil's AI digital twin, trained on professional experience, projects, and technical expertise.",
     url: "https://digitaltwin.tanmayep.dev",
-    siteName: "Tanmay Ekanath Patil",
+    siteName: "Tanmay Patil",
     locale: "en_US",
     type: "website",
     images: [
@@ -53,15 +51,14 @@ export const metadata: Metadata = {
         url: "/profile.jpeg",
         width: 800,
         height: 800,
-        alt: "Tanmay Ekanath Patil",
+        alt: "Tanmay Patil",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Tanmay Ekanath Patil - Software Developer",
-    description:
-      "Software Developer with 5 years of experience in backend engineering, cloud-based applications, and distributed systems.",
+    title: "Tanmay Patil - AI Digital Twin",
+    description: "Interact with Tanmay Patil's AI digital twin.",
     images: ["/profile.jpeg"],
   },
   robots: {
